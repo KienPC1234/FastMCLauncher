@@ -15,7 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CmlLib.Core" Version="4.0.5" />
+    <PackageReference Include="CmlLib.Core.Installer.Forge" Version="1.1.0" />
     <PackageReference Include="INIParser" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />

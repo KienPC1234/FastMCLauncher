@@ -1,18 +1,14 @@
 ﻿using FastMCLauncher.ViewModels.Pages;
-using Wpf.Ui.Abstractions.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FastMCLauncher.Views.Pages
 {
-    public partial class DashboardPage : INavigableView<DashboardViewModel>
+    public partial class DashboardPage : System.Windows.Controls.Page
     {
-        public DashboardViewModel ViewModel { get; }
-
         public DashboardPage(DashboardViewModel viewModel)
         {
-            ViewModel = viewModel;
-            DataContext = this;
-
             InitializeComponent();
+            DataContext = viewModel;
         }
     }
 }

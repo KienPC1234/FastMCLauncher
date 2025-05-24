@@ -6,41 +6,92 @@
     xmlns:local="clr-namespace:FastMCLauncher.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:FastMCLauncher.ViewModels.Pages"
     Title="DashboardPage"
-    d:DataContext="{d:DesignInstance local:DashboardPage,
-                                     IsDesignTimeCreatable=False}"
     d:DesignHeight="450"
     d:DesignWidth="800"
-    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Background="{DynamicResource BackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
 
-    <Grid Margin="10" >
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style TargetType="TreeViewItem">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Margin" Value="2" />
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="150" />
-            <!-- cột label -->
             <ColumnDefinition Width="*" />
-            <!-- cột input -->
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Họ và tên:" VerticalAlignment="Center" Margin="5"/>
-        <TextBox Grid.Row="0" Grid.Column="1" Margin="5"/>
+        <!-- Modpack Name -->
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Modpack Name:" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
+        <ui:TextBox Grid.Row="0" Grid.Column="1" Margin="5" Text="{Binding ModpackName}" />
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Ngày sinh:" VerticalAlignment="Center" Margin="5"/>
-        <DatePicker Grid.Row="1" Grid.Column="1" Margin="5"/>
+        <!-- Minimum RAM -->
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Minimum RAM (MB):" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
+        <ui:TextBox Grid.Row="1" Grid.Column="1" Margin="5" Text="{Binding MinimumRam}" />
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Email:" VerticalAlignment="Center" Margin="5"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Margin="5"/>
+        <!-- Minecraft Version -->
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Minecraft Version:" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
+        <Grid Grid.Row="2" Grid.Column="1" Margin="5">
+            <ComboBox ItemsSource="{Binding MinecraftVersions}" SelectedItem="{Binding SelectedMinecraftVersion}" />
+            <ui:ProgressRing IsIndeterminate="{Binding IsLoading}" Margin="0,0,6,0"  Width="20" Height="20" HorizontalAlignment="Right" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </Grid>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Ghi chú:" VerticalAlignment="Top" Margin="5"/>
-        <TextBox Grid.Row="3" Grid.Column="1" Margin="5" Height="100" AcceptsReturn="True" TextWrapping="Wrap"/>
+        <!-- Mod Loader Type -->
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Mod Loader:" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
+        <ComboBox Grid.Row="3" Grid.Column="1" Margin="5" ItemsSource="{Binding ModLoaderTypes}" SelectedItem="{Binding SelectedModLoaderType}" />
+
+        <!-- Mod Loader Version -->
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Mod Loader Version:" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
+        <Grid Grid.Row="4" Grid.Column="1" Margin="5">
+            <ComboBox ItemsSource="{Binding ModLoaderVersions}" SelectedItem="{Binding SelectedModLoaderVersion}" />
+            <ui:ProgressRing IsIndeterminate="{Binding IsLoading}" Width="20" Height="20" Margin="0,0,6,0" HorizontalAlignment="Right" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </Grid>
+
+        <!-- Modpack Path -->
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Modpack Path:" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
+        <Grid Grid.Row="5" Grid.Column="1" Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ui:TextBox Grid.Column="0" IsReadOnly="True" Text="{Binding ModpackPath}" />
+            <ui:Button Grid.Column="1" Content="Browse" Margin="5,0,0,0" Padding="10,2" Command="{Binding BrowseModpackPathCommand}" />
+        </Grid>
+
+        <!-- File TreeView -->
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Modpack Files:" FontWeight="Medium" VerticalAlignment="Top" Margin="0,10,0,0" />
+        <TreeView Grid.Row="6" Grid.Column="1" Margin="5,10,5,5" ItemsSource="{Binding FileTree}" Background="{DynamicResource ControlFillColorDefaultBrush}">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type vm:TreeViewItemViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="0,0,5,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <!-- Create Button -->
+        <ui:Button Grid.Row="7" Grid.Column="1" Content="Create" Margin="5" Padding="10,5" HorizontalAlignment="Right" Command="{Binding CreateModpackCommand}" />
     </Grid>
-
 </Page>

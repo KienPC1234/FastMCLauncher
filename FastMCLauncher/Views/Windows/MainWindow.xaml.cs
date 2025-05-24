@@ -13,8 +13,7 @@ namespace FastMCLauncher.Views.Windows
         public MainWindow(
             MainWindowViewModel viewModel,
             INavigationViewPageProvider navigationViewPageProvider,
-            INavigationService navigationService
-        )
+            INavigationService navigationService)
         {
             ViewModel = viewModel;
             DataContext = this;
@@ -39,27 +38,17 @@ namespace FastMCLauncher.Views.Windows
 
         public void CloseWindow() => Close();
 
+        public void SetServiceProvider(IServiceProvider serviceProvider)
+        {
+            // Optional: Store service provider if needed for custom logic
+        }
+
         #endregion INavigationWindow methods
 
-        /// <summary>
-        /// Raises the closed event.
-        /// </summary>
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-
-            // Make sure that closing this window will begin the process of closing the application.
             Application.Current.Shutdown();
-        }
-
-        INavigationView INavigationWindow.GetNavigation()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetServiceProvider(IServiceProvider serviceProvider)
-        {
-            throw new NotImplementedException();
         }
     }
 }
