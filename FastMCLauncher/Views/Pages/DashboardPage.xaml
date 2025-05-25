@@ -39,6 +39,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <!-- New row for status -->
         </Grid.RowDefinitions>
 
         <!-- Modpack Name -->
@@ -47,13 +49,13 @@
 
         <!-- Minimum RAM -->
         <TextBlock Grid.Row="1" Grid.Column="0" Text="Minimum RAM (MB):" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
-        <ui:TextBox Grid.Row="1" Grid.Column="1" Margin="5" Text="{Binding MinimumRam}" />
+        <ui:NumberBox Grid.Row="1" Grid.Column="1" Margin="5" Value="{Binding MinimumRam}"  />
 
         <!-- Minecraft Version -->
         <TextBlock Grid.Row="2" Grid.Column="0" Text="Minecraft Version:" FontWeight="Medium" VerticalAlignment="Center" Margin="0,5,0,5" />
         <Grid Grid.Row="2" Grid.Column="1" Margin="5">
             <ComboBox ItemsSource="{Binding MinecraftVersions}" SelectedItem="{Binding SelectedMinecraftVersion}" />
-            <ui:ProgressRing IsIndeterminate="{Binding IsLoading}" Margin="0,0,6,0"  Width="20" Height="20" HorizontalAlignment="Right" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <ui:ProgressRing IsIndeterminate="{Binding IsLoading}" Margin="0,0,6,0" Width="20" Height="20" HorizontalAlignment="Right" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </Grid>
 
         <!-- Mod Loader Type -->
@@ -75,23 +77,57 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ui:TextBox Grid.Column="0" IsReadOnly="True" Text="{Binding ModpackPath}" />
-            <ui:Button Grid.Column="1" Content="Browse" Margin="5,0,0,0" Padding="10,2" Command="{Binding BrowseModpackPathCommand}" />
+            <ui:Button Grid.Column="1" Content="Browse" Margin="5,0,0,0" Command="{Binding BrowseModpackPathCommand}" />
         </Grid>
 
-        <!-- File TreeView -->
+        <!-- File TreeView with Grid Layout -->
         <TextBlock Grid.Row="6" Grid.Column="0" Text="Modpack Files:" FontWeight="Medium" VerticalAlignment="Top" Margin="0,10,0,0" />
-        <TreeView Grid.Row="6" Grid.Column="1" Margin="5,10,5,5" ItemsSource="{Binding FileTree}" Background="{DynamicResource ControlFillColorDefaultBrush}">
-            <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate DataType="{x:Type vm:TreeViewItemViewModel}" ItemsSource="{Binding Children}">
-                    <StackPanel Orientation="Horizontal">
-                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Margin="0,0,5,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <TextBlock Text="{Binding Name}" />
-                    </StackPanel>
-                </HierarchicalDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+        <Grid Grid.Row="6" Grid.Column="1" Margin="5,10,5,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <!-- Header -->
+            <Grid Grid.Row="0" Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="100" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Select" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="5" />
+                <TextBlock Grid.Column="1" Text="Name" FontWeight="Bold" VerticalAlignment="Center" Margin="5" />
+                <TextBlock Grid.Column="2" Text="Size" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5" />
+            </Grid>
+            <!-- TreeView -->
+            <TreeView Grid.Row="1" ItemsSource="{Binding FileTree}" Background="{DynamicResource BackgroundBrush}">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type vm:TreeViewItemViewModel}" ItemsSource="{Binding Children}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60" />
+                                <ColumnDefinition Width="300" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox Grid.Column="0" IsChecked="{Binding IsChecked, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            <ui:TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" />
+                            <ui:TextBlock Grid.Column="2" Text="{Binding FileSize}" TextAlignment="Right" FontSize="14" VerticalAlignment="Center" />
+                        </Grid>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </Grid>
 
-        <!-- Create Button -->
-        <ui:Button Grid.Row="7" Grid.Column="1" Content="Create" Margin="5" Padding="10,5" HorizontalAlignment="Right" Command="{Binding CreateModpackCommand}" />
+        <!-- Status TextBox -->
+        <ui:TextBlock Grid.Row="7" Grid.Column="1" Margin="5" Text="{Binding StatusMessage}" VerticalAlignment="Center" />
+
+        <!-- Create Button with ProgressRing -->
+        <Grid Grid.Row="8" Grid.Column="1" HorizontalAlignment="Right">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ui:Button Grid.Column="0" Content="Create" Margin="5" Padding="10,5" Command="{Binding CreateModpackAsyncCommand}" />
+            <ui:ProgressRing Grid.Column="1" IsIndeterminate="{Binding IsCreating}" Width="20" Height="20" Margin="5,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsCreating, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </Grid>
     </Grid>
 </Page>

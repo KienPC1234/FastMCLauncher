@@ -13,15 +13,15 @@ namespace MCLauncher.ViewModels.Windows
         {
             new NavigationViewItem()
             {
-                Content = "Home",
+                Content = "Bảng Điều Khiển",
                 Icon = new SymbolIcon { Symbol = SymbolRegular.Home24 },
                 TargetPageType = typeof(Views.Pages.DashboardPage)
             },
             new NavigationViewItem()
             {
-                Content = "Data",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.DataHistogram24 },
-                TargetPageType = typeof(Views.Pages.DataPage)
+                Content = "Tài Khoản",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.PersonAccounts20 },
+                TargetPageType = typeof(Views.Pages.TaiKhoanPage)
             }
         };
 

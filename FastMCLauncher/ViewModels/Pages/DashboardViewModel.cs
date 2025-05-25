@@ -40,6 +40,8 @@ namespace FastMCLauncher.ViewModels.Pages
                     }
                 }
             };
+            // Explicitly initialize the command for design-time
+            CreateModpackAsyncCommand = new AsyncRelayCommand(CreateModpackAsync);
             LoadMinecraftVersionsAsyncCommand = new AsyncRelayCommand(async () => await Task.CompletedTask);
             LoadModLoaderVersionsAsyncCommand = new AsyncRelayCommand(async () => await Task.CompletedTask);
         }
@@ -58,6 +60,7 @@ namespace FastMCLauncher.ViewModels.Pages
             FileTree = new ObservableCollection<TreeViewItemViewModel>();
 
             // Initialize commands
+            CreateModpackAsyncCommand = new AsyncRelayCommand(CreateModpackAsync);
             LoadMinecraftVersionsAsyncCommand = new AsyncRelayCommand(LoadMinecraftVersionsAsync);
             LoadModLoaderVersionsAsyncCommand = new AsyncRelayCommand(LoadModLoaderVersionsAsync);
 
@@ -70,12 +73,13 @@ namespace FastMCLauncher.ViewModels.Pages
 
         public IAsyncRelayCommand LoadMinecraftVersionsAsyncCommand { get; }
         public IAsyncRelayCommand LoadModLoaderVersionsAsyncCommand { get; }
+        public IAsyncRelayCommand CreateModpackAsyncCommand { get; private set; } // Explicitly declare the command property
 
         [ObservableProperty]
         private string _modpackName = string.Empty;
 
         [ObservableProperty]
-        private int _minimumRam = 2048;
+        private int _minimumRam = 4096;
 
         [ObservableProperty]
         private ObservableCollection<string> _minecraftVersions;
@@ -103,6 +107,12 @@ namespace FastMCLauncher.ViewModels.Pages
 
         [ObservableProperty]
         private bool _isLoading;
+
+        [ObservableProperty]
+        private bool _isCreating;
+
+        [ObservableProperty]
+        private string _statusMessage = string.Empty;
 
         public bool IsNotLoading => !IsLoading;
 
@@ -158,7 +168,7 @@ namespace FastMCLauncher.ViewModels.Pages
         }
 
         [RelayCommand]
-        private void CreateModpack()
+        private async Task CreateModpackAsync()
         {
             try
             {
@@ -176,6 +186,9 @@ namespace FastMCLauncher.ViewModels.Pages
                 };
                 if (dialog.ShowDialog() == true)
                 {
+                    IsCreating = true;
+                    StatusMessage = "Preparing to create modpack...";
+
                     var savePath = Path.Combine(dialog.SelectedPath, ModpackName);
                     var modpackDir = Path.Combine(savePath, "modpack");
                     Directory.CreateDirectory(modpackDir);
@@ -193,15 +206,22 @@ namespace FastMCLauncher.ViewModels.Pages
                     File.WriteAllText(cfgPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
                     _logger?.Information("Saved cfg.json to {Path}", cfgPath);
 
-                    // Copy selected files/folders
+                    // Copy selected files/folders with status updates
                     var selectedItems = FileTree.SelectMany(node => GetSelectedItems(node)).ToList();
+                    int totalItems = selectedItems.Count;
+                    int currentItem = 0;
+
                     foreach (var item in selectedItems)
                     {
+                        currentItem++;
+                        StatusMessage = $"Copying {Path.GetFileName(item.Path)} ({currentItem}/{totalItems})...";
+                        await Task.Delay(1); // Allow UI update
+
                         var relativePath = Path.GetRelativePath(ModpackPath, item.Path);
                         var destPath = Path.Combine(modpackDir, relativePath);
                         if (item.IsDirectory)
                         {
-                            CopyDirectory(item.Path, destPath);
+                            CopyDirectory(item.Path, destPath, item);
                             _logger?.Information("Copied directory {Source} to {Dest}", item.Path, destPath);
                         }
                         else
@@ -212,6 +232,7 @@ namespace FastMCLauncher.ViewModels.Pages
                         }
                     }
 
+                    StatusMessage = "Modpack creation completed!";
                     _logger?.Information("Created modpack at {Path} with {ItemCount} items", savePath, selectedItems.Count);
                     MessageBox.Show($"Modpack created at: {savePath}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -223,7 +244,13 @@ namespace FastMCLauncher.ViewModels.Pages
             catch (Exception ex)
             {
                 _logger?.Error(ex, "Failed to create modpack");
+                StatusMessage = "Error creating modpack. Check logs.";
                 MessageBox.Show("Failed to create modpack. Check logs for details.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsCreating = false;
+                StatusMessage = string.Empty;
             }
         }
 
@@ -360,11 +387,24 @@ namespace FastMCLauncher.ViewModels.Pages
                     var dirNode = new TreeViewItemViewModel(dir);
                     parent.Children.Add(dirNode);
                     LoadDirectory(dir, dirNode);
+                    // Auto-check only mods and config that are direct children of the root
+                    if (parent.Path == ModpackPath && (dirNode.Name.Equals("mods", StringComparison.OrdinalIgnoreCase) || dirNode.Name.Equals("config", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        dirNode.IsChecked = true;
+                        dirNode.IsSelected = true;
+                        dirNode.PropagateCheckedToChildren();
+                    }
                 }
 
                 foreach (var file in Directory.GetFiles(path))
                 {
-                    parent.Children.Add(new TreeViewItemViewModel(file));
+                    var fileNode = new TreeViewItemViewModel(file);
+                    // If parent is the root mods or config, set file as checked
+                    if (parent.IsChecked && (parent.Name.Equals("mods", StringComparison.OrdinalIgnoreCase) || parent.Name.Equals("config", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        fileNode.IsChecked = true;
+                    }
+                    parent.Children.Add(fileNode);
                 }
                 _logger.Information("Loaded {DirCount} directories and {FileCount} files in {Path}", Directory.GetDirectories(path).Length, Directory.GetFiles(path).Length, path);
             }
@@ -380,11 +420,7 @@ namespace FastMCLauncher.ViewModels.Pages
 
         private IEnumerable<TreeViewItemViewModel> GetSelectedItems(TreeViewItemViewModel node)
         {
-            if (node.IsChecked && node.IsDirectory)
-            {
-                yield return node;
-            }
-            else if (node.IsChecked && !node.IsDirectory)
+            if (node.IsChecked)
             {
                 yield return node;
             }
@@ -397,18 +433,34 @@ namespace FastMCLauncher.ViewModels.Pages
             }
         }
 
-        private void CopyDirectory(string sourceDir, string destDir)
+        private void CopyDirectory(string sourceDir, string destDir, TreeViewItemViewModel node)
         {
             Directory.CreateDirectory(destDir);
+
+            // Copy files that are checked
             foreach (var file in Directory.GetFiles(sourceDir))
             {
-                var destFile = Path.Combine(destDir, Path.GetFileName(file));
-                File.Copy(file, destFile, true);
+                var relativePath = Path.GetRelativePath(node.Path, file);
+                var fileNode = node.Children.FirstOrDefault(c => c.Path == file && !c.IsDirectory);
+                if (fileNode != null && fileNode.IsChecked)
+                {
+                    var destFile = Path.Combine(destDir, Path.GetFileName(file));
+                    File.Copy(file, destFile, true);
+                    _logger?.Information("Copied checked file {Source} to {Dest}", file, destFile);
+                }
             }
+
+            // Copy subdirectories that are checked
             foreach (var dir in Directory.GetDirectories(sourceDir))
             {
-                var destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
-                CopyDirectory(dir, destSubDir);
+                var relativePath = Path.GetRelativePath(node.Path, dir);
+                var dirNode = node.Children.FirstOrDefault(c => c.Path == dir && c.IsDirectory);
+                if (dirNode != null && dirNode.IsChecked)
+                {
+                    var destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
+                    CopyDirectory(dir, destSubDir, dirNode);
+                    _logger?.Information("Copied checked directory {Source} to {Dest}", dir, destSubDir);
+                }
             }
         }
     }

@@ -16,11 +16,22 @@ namespace FastMCLauncher.ViewModels.Pages
             IsDirectory = Directory.Exists(path);
             IsChecked = false;
 
-            // Auto-select mods and config folders
-            if (!isRoot && (Name.Equals("mods", StringComparison.OrdinalIgnoreCase) || Name.Equals("config", StringComparison.OrdinalIgnoreCase)))
+            // Calculate file size for files
+            if (!IsDirectory && File.Exists(path))
             {
-                IsChecked = true;
-                IsSelected = true;
+                try
+                {
+                    var fileInfo = new FileInfo(path);
+                    FileSize = FormatFileSize(fileInfo.Length);
+                }
+                catch (Exception)
+                {
+                    FileSize = "N/A";
+                }
+            }
+            else
+            {
+                FileSize = string.Empty; // Directories don't show size
             }
         }
 
@@ -39,6 +50,9 @@ namespace FastMCLauncher.ViewModels.Pages
         [ObservableProperty]
         private bool _isChecked;
 
+        [ObservableProperty]
+        private string _fileSize;
+
         public ObservableCollection<TreeViewItemViewModel> Children
         {
             get => _children;
@@ -55,6 +69,31 @@ namespace FastMCLauncher.ViewModels.Pages
                     child.IsChecked = value;
                 }
             }
+        }
+
+        public void PropagateCheckedToChildren()
+        {
+            if (IsDirectory && IsChecked)
+            {
+                foreach (var child in Children)
+                {
+                    child.IsChecked = true;
+                    child.PropagateCheckedToChildren();
+                }
+            }
+        }
+
+        private static string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
     }
 }
