@@ -202,7 +202,7 @@ namespace FastMCLauncher.ViewModels.Pages
                         ModLoaderType = SelectedModLoaderType,
                         ModLoaderVersion = SelectedModLoaderVersion
                     };
-                    var cfgPath = Path.Combine(savePath, "cfg.json");
+                    var cfgPath = Path.Combine(savePath, "config.json");
                     File.WriteAllText(cfgPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
                     _logger?.Information("Saved cfg.json to {Path}", cfgPath);
 

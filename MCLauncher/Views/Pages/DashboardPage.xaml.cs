@@ -22,6 +22,7 @@ using Wpf.Ui.Controls;
 using CmlLib.Core.ModLoaders.FabricMC;
 using CmlLib.Core.ModLoaders.LiteLoader;
 using CmlLib.Core.ModLoaders.QuiltMC;
+using MCLauncher.Views.Windows;
 
 namespace MCLauncher.Views.Pages
 {
@@ -192,8 +193,8 @@ namespace MCLauncher.Views.Pages
 
         private async Task LaunchGameAsync(CancellationToken cancellationToken)
         {
-            
 
+            
             // Validate config
             if (_configData == null || string.IsNullOrEmpty(_configData.MinecraftVersion))
             {
@@ -218,8 +219,22 @@ namespace MCLauncher.Views.Pages
             var minecraftDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "modpack");
             var path = new MinecraftPath(minecraftDir);
             _logger.LogDebug("Using Minecraft path: {BasePath}", path.BasePath);
+            var logpath = Path.Combine(minecraftDir, "logs", "latest.log");
+            if (File.Exists(logpath))
+            {
+                try
+                {
+                    File.Delete(logpath);
+                    _logger.LogDebug("Deleted existing log file: {LogPath}", logpath);
+                    File.Create(logpath).Close();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete existing log file: {LogPath}", logpath);
+                    UpdateStatus($"Lỗi: Không thể xóa log file {logpath}", Brushes.Red);
+                }
+            }
 
-           
 
             // Initialize launcher
             var launcher = new MinecraftLauncher(path);
@@ -372,8 +387,12 @@ namespace MCLauncher.Views.Pages
                 process.Start();
 
                 // Wait for game to exit
+                
+                var logViewer = new LogViewer(minecraftDir,process);
+                logViewer.Show();
                 await Task.Run(() => process.WaitForExit(), cancellationToken);
                 mainWindow.Show();
+                logViewer.Close();
             }
             catch (OperationCanceledException)
             {

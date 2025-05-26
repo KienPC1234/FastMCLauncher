@@ -16,8 +16,8 @@
 
     <StackPanel Margin="20">
         <!-- Personalization -->
-        <TextBlock FontSize="20" FontWeight="Medium" Text="Cá Nhân Hóa" />
-        <TextBlock Margin="0,12,0,0" Text="Giao diện" />
+        <ui:TextBlock FontSize="20" FontWeight="Medium" Text="Cá Nhân Hóa" />
+        <ui:TextBlock Margin="0,12,0,0" Text="Giao diện" />
         <RadioButton x:Name="LightThemeRadio" Content="Sáng" GroupName="ThemeSelect" Margin="0,8,0,0" Checked="ThemeRadio_Checked" />
         <RadioButton x:Name="DarkThemeRadio" Content="Tối" GroupName="ThemeSelect" Margin="0,8,0,0" Checked="ThemeRadio_Checked" />
 
@@ -28,17 +28,20 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="RAM Tối Đa (MB):" VerticalAlignment="Center" />
+            <ui:TextBlock  Text="RAM Tối Đa (MB):" VerticalAlignment="Center" />
             <Slider x:Name="RamSlider" Grid.Column="1" Margin="10,0,0,0" Minimum="1" ValueChanged="RamSlider_ValueChanged" TickFrequency="512" IsSnapToTickEnabled="True" />
         </Grid>
-        <TextBlock x:Name="RamValueText" Margin="0,4,0,0" Text="2048 MB" />
+        <ui:TextBlock x:Name="RamValueText" Margin="0,10,0,0" Text="2048 MB" />
         <Grid Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14.253" />
+                <ColumnDefinition Width="12.57"/>
+                <ColumnDefinition Width="30.131"/>
+                <ColumnDefinition Width="172*" />
+                <ColumnDefinition Width="531*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Server IP:" VerticalAlignment="Center" />
-            <ui:TextBox x:Name="ServerIpTextBox" Grid.Column="1" Margin="10,0,0,0" PlaceholderText="Ví dụ: play.example.com" />
+            <ui:TextBlock Text="Server IP:" VerticalAlignment="Center" Grid.ColumnSpan="4" Margin="0,0,172,0" />
+            <ui:TextBox x:Name="ServerIpTextBox" Grid.Column="3" Margin="10,0,0,0" PlaceholderText="Ví dụ: play.example.com" Grid.ColumnSpan="2" />
         </Grid>
         <Grid Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
@@ -48,13 +51,13 @@
             <TextBlock Text="Server Port:" VerticalAlignment="Center" />
             <ui:TextBox x:Name="ServerPortTextBox" Grid.Column="1" Margin="10,0,0,0" PlaceholderText="Ví dụ: 25565" />
         </Grid>
-        <CheckBox x:Name="FullScreenCheckBox" Content="Toàn Màn Hình" Margin="0,12,0,0" />
+        <CheckBox x:Name="FullScreenCheckBox" Content="Toàn Màn Hình" Margin="-10,12,0,0" />
         <Grid Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Độ Phân Giải Màn Hình:" VerticalAlignment="Center" />
+            <ui:TextBlock Text="Độ Phân Giải Màn Hình:" VerticalAlignment="Center" />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
                 <ui:NumberBox x:Name="ScreenWidthBox" Width="100" Value="1600" Minimum="800" Maximum="3840" PlaceholderText="Chiều rộng" />
                 <TextBlock Text=" x " VerticalAlignment="Center" Margin="5,0" />
@@ -66,13 +69,13 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="JVM Arguments:" VerticalAlignment="Center" />
+            <ui:TextBlock Text="JVM Arguments:" VerticalAlignment="Center" />
             <ui:TextBox x:Name="JvmArgumentsTextBox" Grid.Column="1" Margin="10,0,0,0" PlaceholderText="Ví dụ: -XX:+UseG1GC" />
         </Grid>
 
         <!-- Config Info -->
-        <TextBlock Margin="0,24,0,0" FontSize="20" FontWeight="Medium" Text="Thông Tin Modpack" />
-        <TextBlock x:Name="ModpackInfoText" Margin="0,12,0,0" Text="Không tìm thấy file config.json" />
+        <ui:TextBlock Margin="0,24,0,0" FontSize="20" FontWeight="Medium" Text="Thông Tin Modpack" />
+        <ui:TextBlock x:Name="ModpackInfoText" Margin="0,12,0,0" Text="Không tìm thấy file config.json" />
 
         <!-- Save Button -->
         <ui:Button Content="Lưu Cài Đặt" Click="SaveSettings_Click" Margin="0,20,0,0" HorizontalAlignment="Left">
